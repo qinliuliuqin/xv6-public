@@ -9,27 +9,27 @@ $ git clone git@github.com:qinliuliuqin/xv6-public.git
 $ cd xv6-public
 ```
 
-To test Lab 1: 
+To test Lab 1 (system call): 
 ```
 $ git checkout lab1
 $ make; make qemu-nox 
 $ wolfietest
 ```
-To test Lab 2: 
+To test Lab 2 (copy-on-write): 
 ```
 $ git checkout lab2
 $ make; make qemu-nox 
 $ cowtest1; cowtest2; cowtest3
 ```
 
-To test Lab 3: 
+To test Lab 3 (lottery scheduling): 
 ```
 $ git checkout lab3
 $ make; make qemu-nox 
 $ nicetest; randomtest; lotterytest1; lotterytest2; lotterytest3
 ```
 
-To test Lab 4: 
+To test Lab 4 (fast file system): 
 ```
 $ git checkout lab4
 $ make; make qemu-nox 
