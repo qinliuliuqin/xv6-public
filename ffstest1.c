@@ -11,6 +11,8 @@
 #define TESTDIR1 "_testdir1"
 #define TESTDIR2 "_testdir2"
 #define TESTDIR3 "_testdir3"
+#define TESTDIR4 "_testdir4"
+#define TESTDIR5 "_testdir5"
 
 int
 makeandopendir(char *name)
