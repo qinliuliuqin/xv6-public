@@ -174,10 +174,6 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
-	_wolfietest\
-	_cowtest1\
-	_cowtest2\
-	_cowtest3\
 	_nicetest\
 	_randomtest\
     _lotterytest1\
