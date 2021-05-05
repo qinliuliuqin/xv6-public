@@ -174,11 +174,6 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
-	_nicetest\
-	_randomtest\
-    _lotterytest1\
-    _lotterytest2\
-    _lotterytest3\
 	_wolfietest\
 
 fs.img: mkfs README $(UPROGS)
