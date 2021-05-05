@@ -1,8 +1,7 @@
 # Summary
 Codebase: [xv6-public](https://github.com/mit-pdos/xv6-public) \
 Experiments: [CSE 306 labs](https://www.cs.unc.edu/~porter/courses/cse306/s16/labs.html) \
-All experiments were conducted based on the codebase above. \
-May 5th, Qin Liu \
+All experiments were conducted based on the codebase above. 
 
 # How to test?
 ```
