@@ -38,7 +38,7 @@ $ ffstest1; ffstest2; ffstest3
 For more information about the test, please refer to the comment of the code.
 
 
-# Useful links and materials
+# References
 [xv6 book](https://pdos.csail.mit.edu/6.828/2020/xv6/book-riscv-rev1.pdf) \
 [Operating Systems: Three Easy Pieces](https://pages.cs.wisc.edu/~remzi/OSTEP/) \
 [xv6 Joon Lim](https://github.com/joonlim/xv6)
