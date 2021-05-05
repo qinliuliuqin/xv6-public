@@ -41,6 +41,6 @@ For more information about the test, please refer to the comment of the code.
 # References
 [xv6 book](https://pdos.csail.mit.edu/6.828/2020/xv6/book-riscv-rev1.pdf) \
 [Operating Systems: Three Easy Pieces](https://pages.cs.wisc.edu/~remzi/OSTEP/) \
-[xv6 Joon Lim](https://github.com/joonlim/xv6)
-[Exploring xv6](https://www.youtube.com/watch?v=ktkAlbcoz7o)
+[xv6 Joon Lim](https://github.com/joonlim/xv6) \
+[Exploring xv6](https://www.youtube.com/watch?v=ktkAlbcoz7o) \
 [xv6 demo](https://www.youtube.com/watch?v=5E0T2H_lMZI)
