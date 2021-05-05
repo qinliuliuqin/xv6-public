@@ -6,9 +6,10 @@ struct pipe;
 struct proc;
 struct rtcdate;
 struct spinlock;
-struct sleeplock;
 struct stat;
 struct superblock;
+struct bgstat;
+struct fbgstat;
 
 // bio.c
 void            binit(void);
@@ -38,7 +39,7 @@ int             filewrite(struct file*, char*, int n);
 void            readsb(int dev, struct superblock *sb);
 int             dirlink(struct inode*, char*, uint);
 struct inode*   dirlookup(struct inode*, char*, uint*);
-struct inode*   ialloc(uint, short);
+struct inode*   ialloc(uint, short, uint);
 struct inode*   idup(struct inode*);
 void            iinit(int dev);
 void            ilock(struct inode*);
@@ -52,6 +53,8 @@ struct inode*   nameiparent(char*, char*);
 int             readi(struct inode*, char*, uint, uint);
 void            stati(struct inode*, struct stat*);
 int             writei(struct inode*, char*, uint, uint);
+void            blockgroupstat(int, struct bgstat*);
+void            filebgstat(struct file*, struct fbgstat*);;
 
 // ide.c
 void            ideinit(void);
@@ -66,15 +69,20 @@ void            ioapicinit(void);
 // kalloc.c
 char*           kalloc(void);
 void            kfree(char*);
+void            _kfree(char *v);
 void            kinit1(void*, void*);
 void            kinit2(void*, void*);
+void            incref(char*);
+void            decref(char*);
+uint            getref(char*);
+void            printref(char*);
 
 // kbd.c
 void            kbdintr(void);
 
 // lapic.c
 void            cmostime(struct rtcdate *r);
-int             lapicid(void);
+int             cpunum(void);
 extern volatile uint*    lapic;
 void            lapiceoi(void);
 void            lapicinit(void);
@@ -89,7 +97,9 @@ void            end_op();
 
 // mp.c
 extern int      ismp;
+int             mpbcpu(void);
 void            mpinit(void);
+void            mpstartthem(void);
 
 // picirq.c
 void            picenable(int);
@@ -103,19 +113,19 @@ int             pipewrite(struct pipe*, char*, int);
 
 //PAGEBREAK: 16
 // proc.c
-int             cpuid(void);
+struct proc*    copyproc(struct proc*);
 void            exit(void);
 int             fork(void);
 int             growproc(int);
 int             kill(int);
-struct cpu*     mycpu(void);
-struct proc*    myproc();
+void            luckyincrease(int);
+uint            numtickets(int);
 void            pinit(void);
 void            procdump(void);
 void            scheduler(void) __attribute__((noreturn));
 void            sched(void);
-void            setproc(struct proc*);
 void            sleep(void*, struct spinlock*);
+uint            totaltickets(void);
 void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
@@ -132,12 +142,6 @@ void            initlock(struct spinlock*, char*);
 void            release(struct spinlock*);
 void            pushcli(void);
 void            popcli(void);
-
-// sleeplock.c
-void            acquiresleep(struct sleeplock*);
-void            releasesleep(struct sleeplock*);
-int             holdingsleep(struct sleeplock*);
-void            initsleeplock(struct sleeplock*, char*);
 
 // string.c
 int             memcmp(const void*, const void*, uint);
@@ -173,6 +177,7 @@ void            uartputc(int);
 // vm.c
 void            seginit(void);
 void            kvmalloc(void);
+void            vmenable(void);
 pde_t*          setupkvm(void);
 char*           uva2ka(pde_t*, char*);
 int             allocuvm(pde_t*, uint, uint);
@@ -181,10 +186,15 @@ void            freevm(pde_t*);
 void            inituvm(pde_t*, char*, uint);
 int             loaduvm(pde_t*, char*, struct inode*, uint, uint);
 pde_t*          copyuvm(pde_t*, uint);
+pde_t*          cowuvm(pde_t*, uint);
 void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
+
+// random.c
+uint            random(void);
+int             randomrange(int, int);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

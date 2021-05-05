@@ -20,3 +20,9 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+#define SYS_wolfie 22
+#define SYS_nice   23
+#define SYS_random 24
+#define SYS_fsstat 25
+#define SYS_bgstat 26
+#define SYS_fbgstat 27

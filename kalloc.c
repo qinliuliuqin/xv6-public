@@ -9,18 +9,26 @@
 #include "mmu.h"
 #include "spinlock.h"
 
+#define MAXPAGES (PHYSTOP / PGSIZE)
+
+void _freerange(void *vstart, void *vend);
 void freerange(void *vstart, void *vend);
 extern char end[]; // first address after kernel loaded from ELF file
-                   // defined by the kernel linker script in kernel.ld
 
 struct run {
   struct run *next;
+  uint ref; // reference count
 };
+
 
 struct {
   struct spinlock lock;
   int use_lock;
   struct run *freelist;
+  // DEP: For COW fork, we can't store the run in the
+  //      physical page, because we need space for the ref
+  //      count.  Move to the kmem struct.
+  struct run runs[MAXPAGES];
 } kmem;
 
 // Initialization happens in two phases.
@@ -33,14 +41,24 @@ kinit1(void *vstart, void *vend)
 {
   initlock(&kmem.lock, "kmem");
   kmem.use_lock = 0;
-  freerange(vstart, vend);
+  _freerange(vstart, vend);
 }
 
 void
 kinit2(void *vstart, void *vend)
 {
-  freerange(vstart, vend);
+  _freerange(vstart, vend);
   kmem.use_lock = 1;
+}
+
+// only called by kinit2 and kinit2.
+void
+_freerange(void *vstart, void *vend)
+{
+  char *p;
+  p = (char*)PGROUNDUP((uint)vstart);
+  for(; p + PGSIZE <= (char*)vend; p += PGSIZE)
+    _kfree(p);
 }
 
 void
@@ -51,6 +69,27 @@ freerange(void *vstart, void *vend)
   for(; p + PGSIZE <= (char*)vend; p += PGSIZE)
     kfree(p);
 }
+
+// Called by _freerange, which is only called by kinit1, kinit2.
+void
+_kfree(char *v)
+{
+  struct run *r;
+
+  if((uint)v % PGSIZE || v < end || v2p(v) >= PHYSTOP)
+    panic("_kfree");
+
+  memset(v, 1, PGSIZE);
+
+  if(kmem.use_lock)
+    acquire(&kmem.lock);
+  r = &kmem.runs[(V2P(v) / PGSIZE)];
+  r->next = kmem.freelist;
+  kmem.freelist = r;
+  if(kmem.use_lock)
+    release(&kmem.lock);
+}
+
 //PAGEBREAK: 21
 // Free the page of physical memory pointed at by v,
 // which normally should have been returned by a
@@ -61,7 +100,7 @@ kfree(char *v)
 {
   struct run *r;
 
-  if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
+  if((uint)v % PGSIZE || v < end || v2p(v) >= PHYSTOP)
     panic("kfree");
 
   // Fill with junk to catch dangling refs.
@@ -69,7 +108,15 @@ kfree(char *v)
 
   if(kmem.use_lock)
     acquire(&kmem.lock);
-  r = (struct run*)v;
+  r = &kmem.runs[(V2P(v) / PGSIZE)];
+  if (r->ref != 1) {
+    // assert ref == 1
+    cprintf("kfree: assert ref == 1 failed\n");
+    cprintf("0x%x %d\n", r, r->ref);
+    if(kmem.use_lock)
+      release(&kmem.lock);
+    exit();
+  }
   r->next = kmem.freelist;
   kmem.freelist = r;
   if(kmem.use_lock)
@@ -83,14 +130,75 @@ char*
 kalloc(void)
 {
   struct run *r;
+  char *rv;
 
   if(kmem.use_lock)
     acquire(&kmem.lock);
   r = kmem.freelist;
-  if(r)
+  if(r) {
+    r->ref = 1;
     kmem.freelist = r->next;
+  }
   if(kmem.use_lock)
     release(&kmem.lock);
-  return (char*)r;
+  rv = P2V((r - kmem.runs) * PGSIZE);
+  return rv;
 }
 
+/**
+ * Increment the reference count of a page descriptor.
+ */
+void
+incref(char* v)
+{
+  struct run *r;
+
+  if((uint)v % PGSIZE || v < end || v2p(v) >= PHYSTOP)
+    panic("incref");
+
+  if(kmem.use_lock)
+    acquire(&kmem.lock);
+  r = &kmem.runs[(V2P(v) / PGSIZE)];
+  r->ref++;
+  if(kmem.use_lock)
+    release(&kmem.lock);
+}
+
+/**
+ * Decrement the reference count of a page descriptor.
+ */
+void
+decref(char* v)
+{
+  struct run *r;
+
+  if((uint)v % PGSIZE || v < end || v2p(v) >= PHYSTOP)
+    panic("decref");
+
+  if(kmem.use_lock)
+    acquire(&kmem.lock);
+  r = &kmem.runs[(V2P(v) / PGSIZE)];
+  r->ref--;
+  if(kmem.use_lock)
+    release(&kmem.lock);
+}
+
+/**
+ * Get reference count of a page descriptor.
+ */
+uint
+getref(char *v)
+{
+  struct run *r = &kmem.runs[(V2P(v) / PGSIZE)];
+  return r->ref;
+}
+
+/**
+ * Print reference count of a page descriptor.
+ */
+void
+printref(char *v)
+{
+  struct run *r = &kmem.runs[(V2P(v) / PGSIZE)];
+  cprintf("printref: address: 0x%p, ref: %d\n", r, r->ref);
+}
