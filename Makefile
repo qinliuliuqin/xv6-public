@@ -179,6 +179,7 @@ UPROGS=\
     _lotterytest1\
     _lotterytest2\
     _lotterytest3\
+	_wolfietest\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
